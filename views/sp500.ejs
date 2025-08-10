@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S&amp;P 500 Companies - ATFCF Tool</title>
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .nav {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 2rem 3rem 0 3rem;
+      box-sizing: border-box;
+    }
+    .nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 2rem;
+      font-size: 1.1rem;
+      font-weight: 400;
+      transition: color 0.2s;
+    }
+    .nav a.active, .nav a:hover {
+      color: #22c55e;
+      font-weight: 500;
+    }
+    .logo {
+      color: #22c55e;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-right: auto;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem 0 2rem;
+      width: 100%;
+    }
+    .main h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin: 0 0 1.5rem 0;
+    }
+    .main h2 .green {
+      color: #22c55e;
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #0a0a0a;
+      color: #fff;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: #22c55e;
+    }
+    .search-box input::placeholder {
+      color: #666;
+    }
+    .filter-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .filter-controls select {
+      padding: 0.8rem 1rem;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #0a0a0a;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .filter-controls select:focus {
+      outline: none;
+      border-color: #22c55e;
+    }
+    .stats {
+      margin-bottom: 1rem;
+      color: #888;
+      font-size: 0.9rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2.5em;
+      background: #0a0a0a;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px #22c55e22;
+    }
+    th, td {
+      padding: 0.8em 1em;
+      border-bottom: 1px solid #222;
+      text-align: left;
+    }
+    th {
+      background: #181a1b;
+      color: #22c55e;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover {
+      background: #1f2122;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover {
+      background: #111;
+    }
+    .company-row {
+      transition: background 0.2s;
+    }
+    .company-row.hidden {
+      display: none;
+    }
+    .cta {
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7em 2em;
+      font-size: 1.05rem;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #22c55e33;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 1.5em;
+    }
+    .cta:hover {
+      background: #15803d;
+    }
+    .mountains {
+      width: 100vw;
+      min-width: 100%;
+      margin-top: auto;
+      display: block;
+    }
+    .sort-arrow {
+      margin-left: 0.5rem;
+      opacity: 0.5;
+    }
+    .sort-arrow.active {
+      opacity: 1;
+    }
+    @media (max-width: 900px) {
+      .main { padding: 2rem 0.5rem 0 0.5rem; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .search-box { min-width: auto; }
+      .filter-controls { justify-content: space-between; }
+      table, th, td { font-size: 0.95em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <span class="logo">ATFCF</span>
+    <a href="/">Home</a>
+    <a href="/calc">How to Calculate ATFCF</a>
+    <a href="/sp500" class="active">S&amp;P 500 Companies</a>
+  </div>
+  <div class="main">
+    <h2><span class="green">S&amp;P 500 Companies</span></h2>
+    <p></p>
+    
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search companies by name or ticker..." />
+      </div>
+      <div class="filter-controls">
+        <select id="atfcfFilter">
+          <option value="all">All Companies</option>
+          <option value="has-data">Has ATFCF Data</option>
+          <option value="no-data">No ATFCF Data</option>
+        </select>
+        <select id="sortBy">
+          <option value="name">Sort by Name</option>
+          <option value="ticker">Sort by Ticker</option>
+          <option value="atfcf-highest">Sort by ATFCF (Highest)</option>
+          <option value="atfcf-lowest">Sort by ATFCF (Lowest)</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="stats" id="stats">
+      Showing <span id="totalCount"><%= companiesWithATFCF.length %></span> companies
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th id="nameHeader" onclick="sortTable('name')">
+            Name <span class="sort-arrow" id="nameArrow">▼</span>
+          </th>
+          <th id="tickerHeader" onclick="sortTable('ticker')">
+            Ticker <span class="sort-arrow" id="tickerArrow">▼</span>
+          </th>
+          <th id="atfcfHeader" onclick="sortTable('atfcf')">
+            ATFCF <span class="sort-arrow" id="atfcfArrow">▼</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="companiesTableBody">
+        <% companiesWithATFCF.forEach(company => { %>
+          <tr class="company-row" data-name="<%= company.name.toLowerCase() %>" data-ticker="<%= company.ticker.toLowerCase() %>" data-atfcf="<%= company.atfcf || 0 %>">
+            <td><%= company.name %></td>
+            <td><%= company.ticker %></td>
+            <td>
+              <% if (company.atfcf !== null) { %>
+                <%= company.atfcf.toLocaleString() %>
+              <% } else { %>
+                <span style="color: #666;">No data available</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <p>Financial data sourced from Yahoo! Finance via yfinance.</p>
+  </div>
+  
+  <svg class="mountains" height="180" viewBox="0 0 1440 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon fill="#22c55e" fill-opacity="0.7" points="0,180 300,100 600,160 900,80 1200,140 1440,100 1440,180"/>
+    <polygon fill="#22c55e" fill-opacity="0.5" points="0,180 200,120 500,170 800,90 1100,150 1440,120 1440,180"/>
+    <polygon fill="#22c55e" fill-opacity="0.3" points="0,180 100,140 400,180 700,120 1000,170 1440,140 1440,180"/>
+  </svg>
+
+  <script>
+    let currentSort = { column: 'name', direction: 'asc' };
+    let allCompanies = [];
+    
+    // Initialize the table data
+    document.addEventListener('DOMContentLoaded', function() {
+      const rows = document.querySelectorAll('.company-row');
+      allCompanies = Array.from(rows).map(row => ({
+        element: row,
+        name: row.getAttribute('data-name'),
+        ticker: row.getAttribute('data-ticker'),
+        atfcf: parseFloat(row.getAttribute('data-atfcf')) || 0
+      }));
+      
+      // Set up event listeners
+      document.getElementById('searchInput').addEventListener('input', filterCompanies);
+      document.getElementById('atfcfFilter').addEventListener('change', filterCompanies);
+      document.getElementById('sortBy').addEventListener('change', function() {
+        const sortValue = this.value;
+        if (sortValue === 'atfcf-highest') {
+          currentSort.column = 'atfcf';
+          currentSort.direction = 'desc';
+        } else if (sortValue === 'atfcf-lowest') {
+          currentSort.column = 'atfcf';
+          currentSort.direction = 'asc';
+        } else {
+          currentSort.column = sortValue;
+          currentSort.direction = 'asc';
+        }
+        sortAndDisplayCompanies();
+        updateSortArrows();
+      });
+      
+      // Initial sort
+      sortTable('name');
+    });
+    
+    function filterCompanies() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const atfcfFilter = document.getElementById('atfcfFilter').value;
+      
+      let visibleCount = 0;
+      
+      allCompanies.forEach(company => {
+        const matchesSearch = company.name.includes(searchTerm) || company.ticker.includes(searchTerm);
+        const matchesAtfcfFilter = atfcfFilter === 'all' || 
+          (atfcfFilter === 'has-data' && company.atfcf !== null) ||
+          (atfcfFilter === 'no-data' && company.atfcf === null);
+        
+        if (matchesSearch && matchesAtfcfFilter) {
+          company.element.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          company.element.classList.add('hidden');
+        }
+      });
+      
+      updateStats(visibleCount);
+    }
+    
+    function sortTable(column) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+      }
+      
+      // Update the dropdown to reflect the current sort
+      const sortSelect = document.getElementById('sortBy');
+      if (column === 'atfcf') {
+        sortSelect.value = currentSort.direction === 'desc' ? 'atfcf-highest' : 'atfcf-lowest';
+      } else {
+        sortSelect.value = column;
+      }
+      
+      sortAndDisplayCompanies();
+      updateSortArrows();
+    }
+    
+    function sortAndDisplayCompanies() {
+      const tbody = document.getElementById('companiesTableBody');
+      const visibleCompanies = allCompanies.filter(company => !company.element.classList.contains('hidden'));
+      
+      // Sort the visible companies
+      visibleCompanies.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch(currentSort.column) {
+          case 'name':
+            aVal = a.name;
+            bVal = b.name;
+            break;
+          case 'ticker':
+            aVal = a.ticker;
+            bVal = b.ticker;
+            break;
+          case 'atfcf':
+            aVal = a.atfcf;
+            bVal = b.atfcf;
+            break;
+          default:
+            aVal = a.name;
+            bVal = b.name;
+        }
+        
+        if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+      
+      // Reorder the DOM
+      visibleCompanies.forEach(company => {
+        tbody.appendChild(company.element);
+      });
+    }
+    
+    function updateSortArrows() {
+      // Reset all arrows
+      document.querySelectorAll('.sort-arrow').forEach(arrow => {
+        arrow.textContent = '▼';
+        arrow.classList.remove('active');
+      });
+      
+      // Set the active arrow
+      const activeArrow = document.getElementById(currentSort.column + 'Arrow');
+      if (activeArrow) {
+        activeArrow.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
+        activeArrow.classList.add('active');
+      }
+    }
+    
+    function updateStats(visibleCount) {
+      const totalCount = allCompanies.length;
+      const statsElement = document.getElementById('stats');
+      statsElement.innerHTML = `Showing ${visibleCount} of ${totalCount} companies`;
+    }
+  </script>
+</body>
+</html>

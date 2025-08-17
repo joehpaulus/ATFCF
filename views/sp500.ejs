@@ -93,6 +93,7 @@
       display: flex;
       gap: 1rem;
       align-items: center;
+      margin-left: 2rem;
     }
     .filter-controls select {
       padding: 0.8rem 1rem;
@@ -204,11 +205,6 @@
         <input type="text" id="searchInput" placeholder="Search companies by name or ticker..." />
       </div>
       <div class="filter-controls">
-        <select id="atfcfFilter">
-          <option value="all">All Companies</option>
-          <option value="has-data">Has ATFCF Data</option>
-          <option value="no-data">No ATFCF Data</option>
-        </select>
         <select id="sortBy">
           <option value="name">Sort by Name</option>
           <option value="ticker">Sort by Ticker</option>
@@ -277,7 +273,6 @@
       
       // Set up event listeners
       document.getElementById('searchInput').addEventListener('input', filterCompanies);
-      document.getElementById('atfcfFilter').addEventListener('change', filterCompanies);
       document.getElementById('sortBy').addEventListener('change', function() {
         const sortValue = this.value;
         if (sortValue === 'atfcf-highest') {
@@ -300,17 +295,13 @@
     
     function filterCompanies() {
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const atfcfFilter = document.getElementById('atfcfFilter').value;
       
       let visibleCount = 0;
       
       allCompanies.forEach(company => {
         const matchesSearch = company.name.includes(searchTerm) || company.ticker.includes(searchTerm);
-        const matchesAtfcfFilter = atfcfFilter === 'all' || 
-          (atfcfFilter === 'has-data' && company.atfcf !== null) ||
-          (atfcfFilter === 'no-data' && company.atfcf === null);
         
-        if (matchesSearch && matchesAtfcfFilter) {
+        if (matchesSearch) {
           company.element.classList.remove('hidden');
           visibleCount++;
         } else {

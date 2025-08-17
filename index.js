@@ -201,6 +201,97 @@ app.get('/', (req, res) => {
         .main .cta:hover {
           background: #15803d;
         }
+        
+        /* Formula Box Styles */
+        .formula-box {
+          background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+          border: 2px solid #22c55e;
+          border-radius: 16px;
+          padding: 2rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 8px 32px rgba(34, 197, 94, 0.1);
+        }
+        
+        .formula-box h2 {
+          margin: 0 0 1.5rem 0;
+          font-size: 1.5rem;
+          text-align: center;
+          color: #fff;
+        }
+        
+        .formula {
+          font-size: 2rem;
+          font-weight: 700;
+          text-align: center;
+          padding: 1.5rem;
+          background: rgba(34, 197, 94, 0.1);
+          border-radius: 12px;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        /* Components Section */
+        .components h3 {
+          margin: 0 0 1.5rem 0;
+          font-size: 1.3rem;
+          color: #22c55e;
+        }
+        
+        .component-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        
+        .component {
+          background: linear-gradient(135deg, #1f1f1f 0%, #2f2f2f 100%);
+          border: 1px solid #333;
+          border-radius: 12px;
+          padding: 1.5rem;
+          transition: all 0.3s ease;
+        }
+        
+        .component:hover {
+          border-color: #22c55e;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
+        }
+        
+        .component .label {
+          display: block;
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #22c55e;
+          margin-bottom: 0.5rem;
+        }
+        
+        .component .definition {
+          display: block;
+          color: #ccc;
+          line-height: 1.4;
+        }
+        
+        /* Explanation Section */
+        .explanation {
+          background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+          border: 1px solid #333;
+          border-radius: 12px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        
+        .explanation h3 {
+          margin: 0 0 1rem 0;
+          font-size: 1.3rem;
+          color: #22c55e;
+        }
+        
+        .explanation p {
+          margin: 0;
+          color: #ccc;
+          line-height: 1.6;
+        }
+        
         .mountains {
           width: 100vw;
           min-width: 100%;
@@ -345,23 +436,36 @@ app.get('/calc', (req, res) => {
       <div class="main">
         <h1><span class="green">How to Calculate ATFCF</span></h1>
         <div class="desc">
-        <p>
-  The <span class="green">ATFCF</span> formula is:<br>
-  <span class="green">ATFCF</span> = <span class="green">EBIT</span> × (1 − <span class="green">Tax Rate</span>) + <span class="green">Depreciation and Amortization</span> − <span class="green">Changes in Working Capital</span> − <span class="green">Capital Expenditures</span>
-</p>
-        <br>
-        Where:
-        <br>
-        <span class="green">EBIT</span> = Earnings Before Interest and Taxes
-        <br>
-        <span class="green">Tax Rate</span> = Corporate tax rate
-        <br>
-        <span class="green">Depreciation and Amortization</span> = Non-cash expenses that reduce taxable income
-        <br>
-        <span class="green">Changes in Working Capital</span> = Changes in current assets and liabilities
-        <br>
-        <span class="green">Capital Expenditures</span> = Investments in fixed assets like property, equipment, and infrastructure
-      </div>
+          <div class="formula-box">
+            <h2>The <span class="green">ATFCF</span> Formula</h2>
+            <div class="formula">
+              <span class="green">ATFCF</span> = <span class="green">FCF</span> - (<span class="green">EBIT</span> × <span class="green">Tax Rate</span>)
+            </div>
+          </div>
+          
+          <div class="components">
+            <h3>Where:</h3>
+            <div class="component-grid">
+              <div class="component">
+                <span class="label">FCF</span>
+                <span class="definition"> = Free Cash Flow (TTM)</span>
+              </div>
+              <div class="component">
+                <span class="label">EBIT</span>
+                <span class="definition"> = Earnings Before Interest and Taxes (TTM)</span>
+              </div>
+              <div class="component">
+                <span class="label">Tax Rate</span>
+                <span class="definition"> = Effective Corporate Tax Rate</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="explanation">
+            <h3>Why This Formula?</h3>
+            <p>This simplified approach directly adjusts Free Cash Flow by removing the tax burden on EBIT, giving you a clearer picture of after-tax cash generation potential.</p>
+          </div>
+        </div>
 
       <svg class="mountains" height="180" viewBox="0 0 1440 180" fill="none" xmlns="http://www.w3.org/2000/svg">
         <polygon fill="#22c55e" fill-opacity="0.7" points="0,180 300,100 600,160 900,80 1200,140 1440,100 1440,180"/>

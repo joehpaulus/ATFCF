@@ -14,25 +14,25 @@ def calculate_atfcf(ticker):
     try:
         t = get_ticker_data(ticker)
         
-        # Get annual data which includes TTM values (more accurate than summing quarters)
-        cf = t.cashflow
-        income = t.financials
+        # Get TTM data directly using dedicated TTM methods
+        cf = t.ttm_cashflow
+        income = t.ttm_financials
         
         if cf.empty or income.empty:
-            print(f"No data available for {ticker}")
+            print(f"No TTM data available for {ticker}")
             return None
 
         try:
-            # Get TTM values from annual cash flow statement (first column is most recent TTM)
-            ocf_ttm = cf.loc['Operating Cash Flow'].iloc[0]
-            fcf_ttm = cf.loc['Free Cash Flow'].iloc[0]
-            capex_ttm = cf.loc['Capital Expenditure'].iloc[0]
-            da_ttm = cf.loc['Depreciation And Amortization'].iloc[0]
-            delta_wc_ttm = cf.loc['Change In Working Capital'].iloc[0]
+            # Get TTM values from TTM cash flow statement
+            ocf_ttm = cf.loc['Operating Cash Flow'].iloc[0] if 'Operating Cash Flow' in cf.index else 0
+            fcf_ttm = cf.loc['Free Cash Flow'].iloc[0] if 'Free Cash Flow' in cf.index else 0
+            capex_ttm = cf.loc['Capital Expenditure'].iloc[0] if 'Capital Expenditure' in cf.index else 0
+            da_ttm = cf.loc['Depreciation And Amortization'].iloc[0] if 'Depreciation And Amortization' in cf.index else 0
+            delta_wc_ttm = cf.loc['Change In Working Capital'].iloc[0] if 'Change In Working Capital' in cf.index else 0
             
-            # Get TTM values from annual income statement (first column is most recent TTM)
-            ebit_ttm = income.loc['EBIT'].iloc[0]
-            tax_provision_ttm = income.loc['Tax Provision'].iloc[0]
+            # Get TTM values from TTM income statement
+            ebit_ttm = income.loc['EBIT'].iloc[0] if 'EBIT' in income.index else 0
+            tax_provision_ttm = income.loc['Tax Provision'].iloc[0] if 'Tax Provision' in income.index else 0
             
             # Print the key metrics for verification
             print(f"\n=== {ticker} Metrics ===")

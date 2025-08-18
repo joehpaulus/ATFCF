@@ -4,7 +4,7 @@ const config = {
     apiUrl: 'http://localhost:5001'
   },
   production: {
-    apiUrl: 'https://atfcf-api.onrender.com' // This will be your Render API service URL
+    apiUrl: 'https://atfcf-api.onrender.com'
   }
 };
 

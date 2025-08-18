@@ -25,7 +25,7 @@ async function getATFCF(ticker) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
       
-      const res = await fetch(`http://localhost:5001/atfcf?ticker=${ticker}`, {
+      const res = await fetch(`${window.API_BASE_URL}/atfcf?ticker=${ticker}`, {
         signal: controller.signal
       });
       

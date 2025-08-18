@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import yfinance as yf
 import time
+import os
 from functools import lru_cache
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Cache for yfinance data to avoid repeated API calls
 @lru_cache(maxsize=1000)
@@ -97,5 +100,10 @@ def get_atfcf():
         'delta_wc': result['delta_wc']
     })
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy', 'service': 'ATFCF API'})
+
 if __name__ == '__main__':
-    app.run(port=5001)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(host='0.0.0.0', port=port)

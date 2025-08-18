@@ -1,0 +1,26 @@
+services:
+  # Backend API Service (Flask)
+  - type: web
+    name: atfcf-api
+    env: python
+    plan: free
+    buildCommand: pip install -r atfcf_service/requirements.txt
+    startCommand: cd atfcf_service && python atfcf_service.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.16
+      - key: PORT
+        value: 10000
+
+  # Frontend Service (Node.js)
+  - type: web
+    name: atfcf-frontend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: PORT
+        value: 10001

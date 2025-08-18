@@ -215,7 +215,7 @@
     </div>
     
     <div class="stats" id="stats">
-      Showing <span id="totalCount"><%= companiesWithATFCF.length %></span> companies
+      Loading companies...
     </div>
     
     <table>
@@ -233,19 +233,7 @@
         </tr>
       </thead>
       <tbody id="companiesTableBody">
-        <% companiesWithATFCF.forEach(company => { %>
-          <tr class="company-row" data-name="<%= company.name.toLowerCase() %>" data-ticker="<%= company.ticker.toLowerCase() %>" data-atfcf="<%= company.atfcf || 0 %>">
-            <td><%= company.name %></td>
-            <td><%= company.ticker %></td>
-            <td>
-              <% if (company.atfcf !== null) { %>
-                <%= company.atfcf.toLocaleString() %>
-              <% } else { %>
-                <span style="color: #666;">No data available</span>
-              <% } %>
-            </td>
-          </tr>
-        <% }) %>
+        <!-- Table will be populated dynamically with JavaScript -->
       </tbody>
     </table>
     <p>Financial data sourced from Yahoo! Finance via yfinance.</p>
@@ -257,20 +245,171 @@
     <polygon fill="#22c55e" fill-opacity="0.3" points="0,180 100,140 400,180 700,120 1000,170 1440,140 1440,180"/>
   </svg>
 
-  <script src="/config.js"></script>
   <script>
-    let currentSort = { column: 'name', direction: 'asc' };
-    let allCompanies = [];
+    // Configuration for different environments
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_BASE_URL = isDevelopment ? 'http://localhost:5001' : 'https://atfcf-api.onrender.com';
     
-    // Initialize the table data
-    document.addEventListener('DOMContentLoaded', function() {
-      const rows = document.querySelectorAll('.company-row');
-      allCompanies = Array.from(rows).map(row => ({
+    // Cache for ATFCF data
+    const atfcfCache = new Map();
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    
+    // ATFCF fetching function
+    async function getATFCF(ticker) {
+      // Check cache first
+      const cached = atfcfCache.get(ticker);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.value;
+      }
+      
+      const maxRetries = 2;
+      const timeout = 5000;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeout);
+          
+          const res = await fetch(`${API_BASE_URL}/atfcf?ticker=${ticker}`, {
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!res.ok) {
+            if (attempt === maxRetries) {
+              console.error(`HTTP error for ${ticker}: ${res.status}`);
+            }
+            continue;
+          }
+          
+          const data = await res.json();
+          
+          if (data.error) {
+            if (attempt === maxRetries) {
+              console.error(`API error for ${ticker}:`, data.error);
+            }
+            continue;
+          }
+          
+          const result = data.atfcf || null;
+          
+          // Cache the result
+          atfcfCache.set(ticker, {
+            value: result,
+            timestamp: Date.now()
+          });
+          
+          return result;
+          
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            if (attempt === maxRetries) {
+              console.error(`Timeout fetching ATFCF for ${ticker}`);
+            }
+          } else {
+            if (attempt === maxRetries) {
+              console.error(`Error fetching ATFCF for ${ticker}:`, err.message);
+            }
+          }
+          
+          if (attempt === maxRetries) {
+            return null;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      return null;
+    }
+    
+    // Function to get ATFCF data for all companies
+    async function getCompaniesWithATFCF(companies) {
+      console.log(`Fetching ATFCF data for ${companies.length} companies...`);
+      
+      const batchSize = 20;
+      const companiesWithATFCF = [];
+      
+      for (let i = 0; i < companies.length; i += batchSize) {
+        const batch = companies.slice(i, i + batchSize);
+        console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(companies.length/batchSize)} (${batch.length} companies)`);
+        
+        const batchResults = await Promise.all(batch.map(async company => {
+          const atfcf = await getATFCF(company.ticker);
+          return { ...company, atfcf };
+        }));
+        
+        companiesWithATFCF.push(...batchResults);
+        
+        if (i + batchSize < companies.length) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      }
+      
+      return companiesWithATFCF;
+    }
+    
+    // Function to update the table with fetched data
+    function updateTable(companiesWithATFCF) {
+      const tbody = document.getElementById('companiesTableBody');
+      tbody.innerHTML = '';
+      
+      companiesWithATFCF.forEach(company => {
+        const row = document.createElement('tr');
+        row.className = 'company-row';
+        row.setAttribute('data-name', company.name.toLowerCase());
+        row.setAttribute('data-ticker', company.ticker.toLowerCase());
+        row.setAttribute('data-atfcf', company.atfcf || 0);
+        
+        row.innerHTML = `
+          <td>${company.name}</td>
+          <td>${company.ticker}</td>
+          <td>
+            ${company.atfcf !== null ? company.atfcf.toLocaleString() : '<span style="color: #666;">No data available</span>'}
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+      
+      // Update the allCompanies array for sorting/filtering
+      allCompanies = Array.from(document.querySelectorAll('.company-row')).map(row => ({
         element: row,
         name: row.getAttribute('data-name'),
         ticker: row.getAttribute('data-ticker'),
         atfcf: parseFloat(row.getAttribute('data-atfcf')) || 0
       }));
+      
+      // Update stats
+      updateStats(companiesWithATFCF.filter(company => company.atfcf !== null).length);
+    }
+    
+    let currentSort = { column: 'name', direction: 'asc' };
+    let allCompanies = [];
+    
+    // S&P 500 companies data
+    const companies = [
+      { name: '3M', ticker: 'MMM' },
+      { name: 'Apple Inc.', ticker: 'AAPL' },
+      { name: 'Microsoft', ticker: 'MSFT' },
+      { name: 'Amazon', ticker: 'AMZN' },
+      { name: 'Alphabet Inc.', ticker: 'GOOGL' },
+      { name: 'Tesla', ticker: 'TSLA' },
+      { name: 'NVIDIA', ticker: 'NVDA' },
+      { name: 'Berkshire Hathaway', ticker: 'BRK.B' },
+      { name: 'UnitedHealth Group', ticker: 'UNH' },
+      { name: 'JPMorgan Chase', ticker: 'JPM' }
+      // Add more companies as needed
+    ];
+    
+    // Initialize the table data
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Fetch ATFCF data for all companies
+      const companiesWithATFCF = await getCompaniesWithATFCF(companies);
+      
+      // Update the table with fetched data
+      updateTable(companiesWithATFCF);
       
       // Set up event listeners
       document.getElementById('searchInput').addEventListener('input', filterCompanies);
@@ -388,7 +527,7 @@
     function updateStats(visibleCount) {
       const totalCount = allCompanies.length;
       const statsElement = document.getElementById('stats');
-      statsElement.innerHTML = `Showing ${visibleCount} of ${totalCount} companies`;
+      statsElement.innerHTML = `Showing ${visibleCount} companies with ATFCF data`;
     }
   </script>
 </body>

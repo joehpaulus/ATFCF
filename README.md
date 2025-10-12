@@ -1,6 +1,6 @@
 # ATFCF (After Tax Free Cash Flow) Financial Tool
 
-A web app to calculate ATFCF, using a Node.js backend, Postgres database, and yfinance API with Python Microservice in venv folder
+A web app to calculate ATFCF (After Tax Free Cash Flow for S&P 500 Companies), using a Node.js backend, Postgres database, and yfinance API with a Python Microservice. 
 
 ## Development
 
